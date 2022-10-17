@@ -4,25 +4,140 @@ import fs from "fs"
 import colors from 'colors'
 import { exec } from 'child_process'
 
-const config = {
-    'table' : 'mysql_migrations_app',
-    'migrations_types' : ['up', 'down'],
-    'migrations_path': './migrations',
-    'root_path':'./mysql-migrations/'
+let MigrationMap = new WeakMap()
+
+const Migration ={
+
+    'init': class Context {
+
+        constructor(){
+
+            MigrationMap.set(this,{
+                'table' : '',
+                'migrations_folder':'',
+                'root_path':'',
+                'migrations_types':['up', 'down'],
+                'conn':{},
+                'cb':function(){
+                    console.info( colors.bgCyan(" Query Command Completed! ") )
+                }
+            })
+
+        }
+
+        // ################ GET
+
+        get name_table_migrations(){
+            return MigrationMap.get(this).table
+        }
+
+        get migrations_folder(){
+            return MigrationMap.get(this).migrations_folder
+        }
+
+        get root_path(){
+            return MigrationMap.get(this).root_path
+        }
+
+        get conn(){
+            return MigrationMap.get(this).conn
+        }
+
+        get migrations_types(){
+            return MigrationMap.get(this).migrations_types
+        }
+
+        get cb(){
+            return MigrationMap.get(this).cb
+        }
+
+        // ############### SET
+
+        set name_table_migrations(name){
+            MigrationMap.get(this).table = name
+        }
+
+        set migrations_folder(name){
+            MigrationMap.get(this).migrations_folder = name
+        }
+
+        set conn(conn){
+            MigrationMap.get(this).conn = conn
+        }
+
+        set cb(cb){
+            MigrationMap.get(this).cb = cb
+        }
+
+        set migrations_path(migrations_path){
+            MigrationMap.get(this).migrations_path = migrations_path
+        }
+
+        set root_path(root_path){
+            MigrationMap.get(this).root_path = root_path
+        }
+
+        start = function(options){
+
+            const config = {
+                'table' : this.name_table_migrations,
+                'migrations_path':this.migrations_folder,
+                'root_path':this.root_path,
+                'migrations_types':this.migrations_types,
+                'conn':this.conn,
+                'cb':this.cb
+            }
+
+            __query(config, options)
+        }
+
+    }
+
 }
 
-const migrations_path = config.migrations_path
-const root_path = config.root_path
-const table = config.table
+export default Migration
 
-var migrations_types = config.migrations_types
-
-var updateSchema = false // actualizar todo
-var migrate_all = false // forzar migraciones
-
-const queryFunctions = {
+function __query(config, options){
     
-    'run_query': function(conn, query, cb, run){
+    var updateSchema = false
+    var migrate_all = false
+    
+    async function migration(cb, options) {
+
+        var updateSchemaIndex = argv.indexOf("--update-schema")
+
+        if (updateSchemaIndex > -1) {
+            updateSchema = true
+            argv.splice(updateSchemaIndex, 1)
+        }
+
+        var migrate_index = argv.indexOf("--migrate-all")
+
+        if (migrate_index > -1) {
+            migrate_all = true
+            argv.splice(migrate_index, 1)
+        }
+
+        if (options instanceof Array) {
+
+            if (options.indexOf("--migrate-all") > -1) {
+                migrate_all = true
+            }
+
+            if (options.indexOf("--update-schema") > -1) {
+                updateSchema = true
+            }
+        }
+
+        run_query("CREATE TABLE IF NOT EXISTS `" + config.table + "` (`timestamp` varchar(254) NOT NULL UNIQUE)", function (res) {
+            handle(argv,cb)
+        })
+
+    }
+
+    migration(config.cb,options)
+
+    function run_query( query, cb, run){
 
         if (run == null) {
             run = true
@@ -30,7 +145,7 @@ const queryFunctions = {
 
         if (run) {
         
-            conn.getConnection(function(err, connection){
+            config.conn.getConnection(function(err, connection){
 
                 if (err){
                     throw err
@@ -56,9 +171,9 @@ const queryFunctions = {
 
         }
 
-    },
+    }
 
-    'execute_query': async function(conn, final_file_paths, type, cb, run){
+    async function execute_query(final_file_paths, type, cb, run){
 
         if (run == null){
             run = true
@@ -68,114 +183,105 @@ const queryFunctions = {
 
             var file_name = final_file_paths.shift()['file_path']
 
-            var current_file_path = migrations_path + "/" + file_name
+            var current_file_path = '../../'+config.root_path + config.migrations_path + "/" + file_name
 
             const file = await import(current_file_path)
 
             const queries = file.default
 
-            console.info(colors.green("Run: " + run + " Type: " + type.toUpperCase() + ": " + queries[type]))
+            console.info( colors.bgGreen("Run: " + run + " Type: " + type.toUpperCase() + ": " + queries[type]) )
 
             var timestamp_val = file_name.split("_", 1)[0]
 
             if (typeof (queries[type]) == 'string') {
 
-                run_query(conn, queries[type], function (res) {
+                run_query(queries[type], function (res) {
 
-                    updateRecords(conn, type, table, timestamp_val, function () {
-                        execute_query(conn, final_file_paths, type, cb, run)
+                    updateRecords(type, timestamp_val, function () {
+                        execute_query(final_file_paths, type, cb, run)
                     })
 
                 }, run)
 
             } else if (typeof (queries[type]) == 'function') {
 
-                console.info(`${type.toUpperCase()} Function: "${queries[type].toString()}"`)
+                queries[type](config.conn,function () {
 
-                queries[type](conn, function () {
-
-                    updateRecords(conn, type, table, timestamp_val, function () {
-                        execute_query(conn, final_file_paths, type, cb)
+                    updateRecords(type, timestamp_val, function () {
+                        execute_query(final_file_paths, type, cb)
                     })
+
                 })
             }
 
 
         } else {
 
-            console.info(colors.blue("No more " + type.toUpperCase() + " migrations to run"))
+            console.info(colors.bgYellow(" No more " + type.toUpperCase() + " migrations to running "))
             cb()
 
         }
 
-    },
+    }
 
-    'updateRecords': function(conn, type, table, timestamp_val, cb) {
+    function updateRecords(type, timestamp_val, cb) {
 
         var query = ''
 
         if (type == 'up') {
 
-            query = "INSERT INTO " + table + " (`timestamp`) VALUES ('" + timestamp_val + "')"
+            query = "INSERT INTO " + config.table + " (`timestamp`) VALUES ('" + timestamp_val + "')"
 
         } else if(type == 'down'){
 
-            query = "DELETE FROM " + table + " WHERE `timestamp` = '" + timestamp_val + "'"
+            query = "DELETE FROM " + config.table + " WHERE `timestamp` = '" + timestamp_val + "'"
 
         }
 
-        run_query(conn, query, function (res) {
+        run_query(query, function (res) {
             cb()
         })
 
     }
 
-}
-
-const fileFunctions = {
-
-    'validate_file_name' : function(file_name) {
+    function validate_file_name(file_name) {
 
         var patt = /^[0-9a-zA-Z-_]+$/
     
         if (!patt.test(file_name)) {
             throw new Error("File name can contain alphabets, numbers, hyphen or underscore")
         }
-    },
+    }
+
+    function readFolder(cb){
     
-    'readFolder' :function(cb) {
-    
-        var relative_path = root_path+migrations_path
+        var relative_path = './'+config.root_path + config.migrations_path
     
         fs.readdir(relative_path, function (err, files) {
-    
+        
             if (err) {
-                throw err;
+                throw err
             }
-    
+        
             var schemaPath = files.indexOf("schema.sql")
-    
+        
             if (schemaPath > -1) {
                 files.splice(schemaPath, 1)
             }
-    
+        
             cb(files)
-    
+        
         })
     }
 
-}
-
-const coreFunctions = {
-
-    'add_migration': function (argv, cb) {
+    function add_migration(argv, cb) {
     
-        fileFunctions.validate_file_name(argv[4])
+        validate_file_name(argv[4])
     
-        fileFunctions.readFolder(function (files) {
+        readFolder(function (files) {
     
             var file_name = Date.now() + "_" + argv[4]
-            var file_path = root_path+migrations_path + '/' + file_name + '.js'
+            var file_path = config.root_path + config.migrations_path + '/' + file_name + '.js'
     
             var sql_json = {
                 up   : '',
@@ -195,7 +301,7 @@ const coreFunctions = {
                     throw err
                 }
     
-                console.info( colors.green("Added file migration: " + file_name ))
+                console.info( colors.bgGreen(" Added file migration: " + file_name+' ' ))
     
                 cb()
     
@@ -203,11 +309,11 @@ const coreFunctions = {
     
         })
     
-    },
+    }
     
-    'up_migrations': function (conn, max_count, cb) {
+    function up_migrations(max_count, cb) {
     
-        queryFunctions.run_query(conn, "SELECT timestamp FROM " + table + " ORDER BY timestamp DESC LIMIT 1", function (results) {
+        run_query("SELECT timestamp FROM " + config.table + " ORDER BY timestamp DESC LIMIT 1", function (results) {
     
             var file_paths = []
             var max_timestamp = 0
@@ -216,7 +322,7 @@ const coreFunctions = {
                 max_timestamp = results[0].timestamp
             }
     
-            fileFunctions.readFolder(function (files) {
+            readFolder(function (files) {
     
                 files.forEach(function (file) {
     
@@ -238,21 +344,21 @@ const coreFunctions = {
     
                 var final_file_paths = file_paths.sort(function (a, b) { return (a.timestamp - b.timestamp) }).slice(0, max_count)
     
-                queryFunctions.execute_query(conn, final_file_paths, 'up', cb)
+                execute_query( final_file_paths, 'up', cb)
     
             })
     
         })
-    },
+    }
     
-    'up_migrations_all': function(conn, max_count, cb) {
+    function up_migrations_all(max_count, cb) {
     
-        queryFunctions.run_query(conn, "SELECT timestamp FROM " + table, function (results) {
+        run_query("SELECT timestamp FROM " + config.table, function (results) {
     
             var file_paths = []
             var timestamps = results.map(r => parseInt(r.timestamp))
     
-            fileFunctions.readFolder(function (files) {
+            readFolder(function (files) {
     
                 files.forEach(function (file) {
     
@@ -269,18 +375,20 @@ const coreFunctions = {
                     } else {
                         throw new Error('Invalid file ' + file)
                     }
-            })
+                })
     
-            var final_file_paths = file_paths.sort(function(a, b) { return (a.timestamp - b.timestamp)}).slice(0, max_count)
-                queryFunctions.execute_query(conn, final_file_paths, 'up', cb)
+                var final_file_paths = file_paths.sort(function(a, b) { return (a.timestamp - b.timestamp)}).slice(0, max_count)
+                
+                execute_query(final_file_paths, 'up', cb)
+            
             })
-    
+            
         })
-    },
+    }
     
-    'down_migrations':function (conn, max_count, cb) {
+    function down_migrations(max_count, cb) {
     
-        queryFunctions.run_query(conn, "SELECT timestamp FROM " + table + " ORDER BY timestamp DESC LIMIT " + max_count, function (results) {
+        run_query("SELECT timestamp FROM " + config.table + " ORDER BY timestamp DESC LIMIT " + max_count, function (results) {
     
             var file_paths = []
     
@@ -290,7 +398,7 @@ const coreFunctions = {
                     return ele.timestamp
                 })
     
-                fileFunctions.readFolder( function (files) {
+                readFolder(function (files) {
     
                     files.forEach(function (file) {
     
@@ -303,86 +411,90 @@ const coreFunctions = {
                     })
     
                     var final_file_paths = file_paths.sort(function(a, b) { return (b.timestamp - a.timestamp)}).slice(0, max_count)
-                    queryFunctions.execute_query(conn, final_file_paths, 'down', cb)
+                    execute_query(final_file_paths, 'down', cb)
     
                 })
             }
     
         })
-    },
+    }
     
-    'run_migration_directly':async function(file, type, conn, cb) {
+    async function run_migration_directly(file, type, cb) {
     
-        var current_file_path = migrations_path + "/" + file
+        var current_file_path = config.migrations_path + "/" + file
         
-        const file_data = await import(current_file_path)
+        const file_data = await import('../../'+config.root_path + current_file_path)
     
         const query = file_data.default
         
         if (typeof (query[type]) == 'string') {
     
             console.info(`Direct: ${type.toUpperCase()} Query: "${query[type].toString()}"`)
-            queryFunctions.run_query(conn, query[type], cb)
-            console.info( colors.blue('Direct: Query String!') )
+            run_query(query[type], cb)
+            console.info( colors.bgBlue(' Direct: Query String! ') )
     
         } else if (typeof (query[type]) == 'function') {
     
             console.info(`Direct: ${type.toUpperCase()} Function: "${query[type]}"`)
-            query[type](conn, cb)
-            console.info( colors.blue('Direct: Query Function!') )
+            query[type](config.conn,cb)
+            console.info( colors.bgBlue(' Direct: Query Function! ') )
     
         }
     
     
-    },
+    }
     
-    'update_schema':function(conn, cb) {
+    function update_schema(cb) {
     
-        var conn_config = conn.config.connectionConfig
-        var filePath = migrations_path + '/' + 'schema.sql'
-    
+        var conn_config = config.conn.config.connectionConfig
+        var filePath = config.root_path + config.migrations_path + '/' + 'schema.sql'
+        
         fs.unlink(filePath, function () {
-    
-        var cmd = "mysqldump --no-data "
-        if (conn_config.host) {
-          cmd = cmd + " -h " + conn_config.host
-        }
-    
-        if (conn_config.port) {
-          cmd = cmd + " --port=" + conn_config.port
-        }
-    
-        if (conn_config.user) {
-          cmd = cmd + " --user=" + conn_config.user
-        }
-    
-        if (conn_config.password) {
-          cmd = cmd + " --password=" + conn_config.password;
-        }
-    
-        cmd = cmd + " " + conn_config.database
-    
-        exec(cmd, function (error, stdout, stderr) {
-    
-            fs.writeFile(filePath, stdout, function (err) {
-    
-                if (err) {
-                    console.log(colors.red("Could not save schema file"))
-                }
-    
-                cb()
-    
+            
+            var cmd = "mysqldump --no-data "
+            if (conn_config.host) {
+              cmd = cmd + " -h " + conn_config.host
+            }
+        
+            if (conn_config.port) {
+              cmd = cmd + " --port=" + conn_config.port
+            }
+        
+            if (conn_config.user) {
+              cmd = cmd + " --user=" + conn_config.user
+            }
+        
+            if (conn_config.password) {
+              cmd = cmd + " --password=" + conn_config.password
+            }
+        
+            cmd = cmd + " " + conn_config.database
+        
+            exec(cmd, function (error, stdout, stderr) {
+            
+                fs.writeFile(filePath, stdout, function (err) {
+                
+                    if (err) {
+                        console.log(colors.red("Could not save schema file"))
+                    }
+                
+                    cb()
+                
+                })
+
+                console.log(colors.red(error))
+
             })
+    
         })
+
+    }
     
-      })
-    },
+    function createFromSchema(cb) {
     
-    'createFromSchema':function(conn, cb) {
-    
-        var conn_config = conn.config.connectionConfig
+        var conn_config = config.conn.config.connectionConfig
       
-        var filePath = migrations_path + '/' + 'schema.sql'
+        var filePath = config.root_path + config.migrations_path + '/' + 'schema.sql'
       
         if (fs.existsSync(filePath)) {
     
@@ -417,7 +529,7 @@ const coreFunctions = {
     
                     var file_paths = []
             
-                    fileFunctions.readFolder(function (files) {
+                    readFolder(function (files) {
               
                         files.forEach(function (file) {
                 
@@ -434,7 +546,7 @@ const coreFunctions = {
     
                         var final_file_paths = file_paths.sort(function(a, b) { return (a.timestamp - b.timestamp)}).slice(0, 9999999)
               
-                        queryFunctions.execute_query(conn, path, final_file_paths, 'up', cb, false)
+                        execute_query(final_file_paths, 'up', cb, false)
     
                     })
     
@@ -448,137 +560,99 @@ const coreFunctions = {
         }
     
     }
-    
-}
 
-function migration(conn, cb, options) {
-  
-    if(cb == null) cb = () => {}
+    function handle(argv,cb) {
 
-    var updateSchemaIndex = argv.indexOf("--update-schema")
+        if (argv.length > 2 && argv.length <= 6) {
 
-    if (updateSchemaIndex > -1) {
-        updateSchema = true
-        argv.splice(updateSchemaIndex, 1)
-    }
+            if (argv[2] == 'add' && (argv[3] == 'migration' || argv[3] == 'seed')) {
 
-    var migrate_index = argv.indexOf("--migrate-all")
+                add_migration(argv,function () {
+                    config.conn.end()
+                    cb()
+                })
 
-    if (migrate_index > -1) {
-        migrate_all = true
-        argv.splice(migrate_index, 1)
-    }
+            } else if (argv[2] == 'up') {
 
-    if (options instanceof Array) {
+                var count = null
 
-        if (options.indexOf("--migrate-all") > -1) {
-            migrate_all = true
-        }
+                if (argv.length > 3) {
+                    count = parseInt(argv[3]);
+                } else {
+                    count = 999999;
+                }
 
-        if (options.indexOf("--update-schema") > -1) {
-            updateSchema = true
-        }
-    }
+                if (migrate_all) {
+                    up_migrations_all(count, function () {
+                        updateSchemaAndEnd()
+                        cb()
+                    })
 
-    queryFunctions.run_query(conn, "CREATE TABLE IF NOT EXISTS `" + table + "` (`timestamp` varchar(254) NOT NULL UNIQUE)", function (res) {
-        handle(argv, conn, cb)
-    })
+                } else {
 
-}
+                    up_migrations(count, function () {
+                        updateSchemaAndEnd()
+                        cb()
+                    })
+                }
 
-function handle(argv, conn, cb) {
+            } else if (argv[2] == 'down') {
 
-    if (argv.length > 2 && argv.length <= 6) {
+                var count = null
 
-        if (argv[2] == 'add' && (argv[3] == 'migration' || argv[3] == 'seed')) {
+                if (argv.length > 3) {
+                    count = parseInt(argv[3])
+                } else count = 1
 
-            coreFunctions.add_migration(argv, function () {
-                conn.end()
-                cb()
-            })
+                down_migrations(count, function () {
+                    updateSchemaAndEnd()
+                    cb()
+                })
 
-        } else if (argv[2] == 'up') {
+            } else if (argv[2] == 'refresh') {
 
-            var count = null
+                down_migrations(999999, function () {
 
-            if (argv.length > 3) {
-                count = parseInt(argv[3]);
-            } else {
-                count = 999999;
+                    up_migrations(999999, function () {
+                        updateSchemaAndEnd()
+                        cb()
+                    })
+
+                })
+
+                
+            } else if (argv[2] == 'run' && config.migrations_types.indexOf(argv[4]) > -1) {
+
+                run_migration_directly(argv[3], argv[4], function () {
+                    updateSchemaAndEnd()
+                    cb()
+                })
+
+            } else if (argv[2] == 'load-from-schema') {
+
+                createFromSchema(function () {
+                   config.conn.end()
+                   cb()
+                })
+
+            } else{
+                throw new Error('command not found : ' + argv.join(" "))
             }
 
-            if (migrate_all) {
-                coreFunctions.up_migrations_all(conn, count, function () {
-                    updateSchemaAndEnd(conn)
-                    cb()
-                })
-
-            } else {
-
-                coreFunctions.up_migrations(conn, count, function () {
-                    updateSchemaAndEnd(conn)
-                    cb()
-                })
-            }
-
-        } else if (argv[2] == 'down') {
-
-            var count = null
-
-            if (argv.length > 3) {
-                count = parseInt(argv[3])
-            } else count = 1
-
-                coreFunctions.down_migrations(conn, count, function () {
-                    updateSchemaAndEnd(conn)
-                    cb()
-                })
-
-        } else if (argv[2] == 'refresh') {
-
-            coreFunctions.down_migrations(conn, 999999, function () {
-
-                coreFunctions.up_migrations(conn, 999999, function () {
-                    updateSchemaAndEnd(conn)
-                    cb()
-                })
-
-            })
-
-        } else if (argv[2] == 'run' && migrations_types.indexOf(argv[4]) > -1) {
-
-            coreFunctions.run_migration_directly(argv[3], argv[4], conn, function () {
-                updateSchemaAndEnd(conn);
-                cb()
-            })
-
-        } else if (argv[2] == 'load-from-schema') {
-
-            coreFunctions.createFromSchema(conn, function () {
-               conn.end()
-               cb()
-            })
-
-        } else{
-            throw new Error('command not found : ' + argv.join(" "))
         }
-
     }
-}
 
-function updateSchemaAndEnd(conn) {
+    function updateSchemaAndEnd() {
 
-    if (updateSchema) {
+        if (updateSchema) {
 
-        coreFunctions.update_schema(conn, function () {
-            conn.end()
-        })
+            update_schema(function () {
+                config.conn.end()
+            })
 
-    } else {
-        conn.end()
+        } else {
+            config.conn.end()
+        }
     }
-}
 
-export default {
-    'start': migration
 }
