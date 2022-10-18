@@ -35,7 +35,8 @@ link: https://github.com/kawadhiya21/mysql-migrations
 - steep 3
 
     - add migrations_config.js file in 'mysql2-migrations' folder with next content
-
+    - here include your credentials from mysql
+    
 ```javascript
 
     import mysql from 'mysql2'
@@ -109,16 +110,19 @@ link: https://github.com/kawadhiya21/mysql-migrations
 
 # edit file migrations 
 
-    - after add file to migrate, example: npm run db_create create_users_table 
+    - after add file to migrate, example:
+
+    ```javascript
+     npm run db_create create_users_table 
+    ```
+    
     - should to go 'migrations' folder and edit file, example:
 
-
-    - Choose one of the two ways:
+    - Choose one format:
 
     - whit call back function:
 ```javascript
 
-    // Choose one of the two ways
 
     export default {
     

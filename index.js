@@ -12,14 +12,14 @@ const Migration ={
         constructor(){
 
             MigrationMap.set(this,{
-                'name_app':'Rockhount ',
+                'name_app':'Sabueso ',
                 'table' : '',
                 'migrations_folder':'',
                 'root_path':'',
                 'migrations_types':['up', 'down'],
                 'conn':{},
                 'cb':function(){
-                    console.info( colors.bgCyan("Rockhount | Command Completed! ") )
+                    console.info( colors.bgCyan("Sabueso | Command Completed! ") )
                 }
             })
 
