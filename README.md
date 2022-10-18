@@ -16,12 +16,13 @@ link: https://github.com/kawadhiya21/mysql-migrations
 
 # configuration
 
-- install
 
 - steep 1
 
-    npm i mysql2
-    npm i mysql2-migrations-module
+    - install
+
+    -npm i mysql2
+    -npm i mysql2-migrations-module
 
 - steep 2
 
@@ -65,10 +66,10 @@ link: https://github.com/kawadhiya21/mysql-migrations
 
     create a subfolder in 'mysql2-migrations' folder with name 'migrations'
 
-    root_app/
-        mysql2-migrations/
-            migrations_config.js
-            migrations/
+    -root_app/
+        -mysql2-migrations/
+            -migrations_config.js
+            -migrations/
 
 - steep 5
 
@@ -77,20 +78,29 @@ link: https://github.com/kawadhiya21/mysql-migrations
 ```javascript
 
     "scripts": {
-        "db_create": "node mysql2-migrations/migrations_config.js add migration",           // create file to migrate, example: npm run db_create create_users_table
-        "db_refresh": "node mysql2-migrations/migrations_config.js refresh",                // undo y redo all migrations (CAUTION DATA LOSS, It is not recommended to add it ) , example: npm run db_refresh
-        "db_migrate_all": "node mysql2-migrations/migrations_config.js up --migrate-all",   // migrate all files pending, example: npm run db_migrate_all
-        "db_migrate": "node mysql2-migrations/migrations_config.js up 1",                   // migrate last file pending, example: npm run db_migrate
-        "db_rollback": "node mysql2-migrations/migrations_config.js down",                  // undo latest migration,     example: npm run db_rollback 
+        "db_create": "node mysql2-migrations/migrations_config.js add migration",           
+        "db_refresh": "node mysql2-migrations/migrations_config.js refresh",                
+        "db_migrate_all": "node mysql2-migrations/migrations_config.js up --migrate-all",   
+        "db_migrate": "node mysql2-migrations/migrations_config.js up 1",                   
+        "db_rollback": "node mysql2-migrations/migrations_config.js down",                   
     }
 
 
 ```
 
-    too You can also UP or DOWN one migration at a time, example:
+    -description
 
+    -"db_create"        // create file to migrate, example: npm run db_create create_users_table
+    -"db_refresh"       // undo y redo all migrations (CAUTION DATA LOSS, It is not recommended to add it ) , example: npm run db_refresh
+    -"db_migrate_all"   // migrate all files pending, example: npm run db_migrate_all
+    -"db_migrate"       // migrate last file pending, example: npm run db_migrate
+    -"db_rollback"      // undo latest migration,     example: npm run db_rollback 
+
+    too You can also UP or DOWN one migration at a time, example:
+```javascript
     node mysql2-migrations/migrations_config.js run 1500891087394_create_table_users.js up
     node mysql2-migrations/migrations_config.js run 1500891087394_create_table_users.js down
+```
 
 # edit file migrations 
 
