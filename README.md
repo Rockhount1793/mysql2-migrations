@@ -55,7 +55,7 @@ link: https://github.com/kawadhiya21/mysql-migrations
         'queueLimit':0
     })
 
-    // configuration 'mysql2-migrations-module' to execute querys (Try not to change the preset parameters)
+    // configuration 'mysql2-migrations' to execute querys (Try not to change the preset parameters)
 
     const db_query = new migration.init()
     db_query.conn = conn
@@ -115,7 +115,7 @@ link: https://github.com/kawadhiya21/mysql-migrations
 ```javascript
 
      npm run db_create create_users_table 
-     
+
 ```
     
     - should to go 'migrations' folder and edit file, example:
