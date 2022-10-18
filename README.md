@@ -1,4 +1,4 @@
-# mysql-migrations
+# mysql2-migrations
 Create and manager migrations in mysql from repositories with configuration "type module"
 
 # resume
