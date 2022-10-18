@@ -36,7 +36,7 @@ link: https://github.com/kawadhiya21/mysql-migrations
 
     - add migrations_config.js file in 'mysql2-migrations' folder with next content
     - here include your credentials from mysql
-    
+
 ```javascript
 
     import mysql from 'mysql2'
@@ -112,9 +112,11 @@ link: https://github.com/kawadhiya21/mysql-migrations
 
     - after add file to migrate, example:
 
-    ```javascript
+```javascript
+
      npm run db_create create_users_table 
-    ```
+     
+```
     
     - should to go 'migrations' folder and edit file, example:
 
