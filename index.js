@@ -2,7 +2,6 @@
 import { argv } from 'node:process'
 import fs from "fs"
 import colors from 'colors'
-import { exec } from 'child_process'
 
 let MigrationMap = new WeakMap()
 
@@ -13,19 +12,24 @@ const Migration ={
         constructor(){
 
             MigrationMap.set(this,{
+                'name_app':'Rockhount ',
                 'table' : '',
                 'migrations_folder':'',
                 'root_path':'',
                 'migrations_types':['up', 'down'],
                 'conn':{},
                 'cb':function(){
-                    console.info( colors.bgCyan(" Query Command Completed! ") )
+                    console.info( colors.bgCyan("Rockhount Say: Query Command Completed! ") )
                 }
             })
 
         }
 
         // ################ GET
+
+        get name_app(){
+            return MigrationMap.get(this).name_app
+        }
 
         get name_table_migrations(){
             return MigrationMap.get(this).table
@@ -69,10 +73,6 @@ const Migration ={
             MigrationMap.get(this).cb = cb
         }
 
-        set migrations_path(migrations_path){
-            MigrationMap.get(this).migrations_path = migrations_path
-        }
-
         set root_path(root_path){
             MigrationMap.get(this).root_path = root_path
         }
@@ -80,6 +80,7 @@ const Migration ={
         start = function(options){
 
             const config = {
+                'name_app': this.name_app,
                 'table' : this.name_table_migrations,
                 'migrations_path':this.migrations_folder,
                 'root_path':this.root_path,
@@ -99,19 +100,11 @@ export default Migration
 
 function __query(config, options){
     
-    var updateSchema = false
     var migrate_all = false
     
     async function migration(cb, options) {
 
-        var updateSchemaIndex = argv.indexOf("--update-schema")
-
-        if (updateSchemaIndex > -1) {
-            updateSchema = true
-            argv.splice(updateSchemaIndex, 1)
-        }
-
-        var migrate_index = argv.indexOf("--migrate-all")
+        let migrate_index = argv.indexOf("--migrate-all")
 
         if (migrate_index > -1) {
             migrate_all = true
@@ -124,9 +117,6 @@ function __query(config, options){
                 migrate_all = true
             }
 
-            if (options.indexOf("--update-schema") > -1) {
-                updateSchema = true
-            }
         }
 
         run_query("CREATE TABLE IF NOT EXISTS `" + config.table + "` (`timestamp` varchar(254) NOT NULL UNIQUE)", function (res) {
@@ -189,7 +179,7 @@ function __query(config, options){
 
             const queries = file.default
 
-            console.info( colors.bgGreen("Run: " + run + " Type: " + type.toUpperCase() + ": " + queries[type]) )
+            console.info( colors.bgGreen( colors.bgMagenta(config.name_app)+" Say: Dispatch: " + run + " Type: " + type.toUpperCase() + " Query: " + queries[type]) )
 
             var timestamp_val = file_name.split("_", 1)[0]
 
@@ -217,7 +207,7 @@ function __query(config, options){
 
         } else {
 
-            console.info(colors.bgYellow(" No more " + type.toUpperCase() + " migrations to running "))
+            console.info(colors.bgYellow(colors.bgMagenta(config.name_app)+ " Say: No more " + type.toUpperCase() + " migrations to running! "))
             cb()
 
         }
@@ -263,12 +253,6 @@ function __query(config, options){
                 throw err
             }
         
-            var schemaPath = files.indexOf("schema.sql")
-        
-            if (schemaPath > -1) {
-                files.splice(schemaPath, 1)
-            }
-        
             cb(files)
         
         })
@@ -280,10 +264,10 @@ function __query(config, options){
     
         readFolder(function (files) {
     
-            var file_name = Date.now() + "_" + argv[4]
-            var file_path = config.root_path + config.migrations_path + '/' + file_name + '.js'
+            let file_name = Date.now() + "_" + argv[4]
+            let file_path = config.root_path + config.migrations_path + '/' + file_name + '.js'
     
-            var sql_json = {
+            let sql_json = {
                 up   : '',
                 down : ''
             }
@@ -292,16 +276,15 @@ function __query(config, options){
                 sql_json['up'] = argv[5]
             }
     
-            var content = 'export default ' + JSON.stringify(sql_json, null, 4)
+            let content = 'export default ' + JSON.stringify(sql_json, null, 4)
     
             fs.writeFile(file_path, content, 'utf-8', function (err) {
     
-                if (err) {
-    
+                if(err){
                     throw err
                 }
     
-                console.info( colors.bgGreen(" Added file migration: " + file_name+' ' ))
+                console.info( colors.bgGreen(colors.bgMagenta(config.name_app) + " Say: Added file migration: " + file_name+' ' ))
     
                 cb()
     
@@ -328,7 +311,7 @@ function __query(config, options){
     
                     var timestamp_split = file.split("_", 1)
     
-                    if (timestamp_split.length) {
+                    if (timestamp_split.length){
     
                         var timestamp = parseInt(timestamp_split[0])
     
@@ -431,141 +414,24 @@ function __query(config, options){
     
             console.info(`Direct: ${type.toUpperCase()} Query: "${query[type].toString()}"`)
             run_query(query[type], cb)
-            console.info( colors.bgBlue(' Direct: Query String! ') )
+            console.info( colors.bgBlue(colors.bgMagenta(config.name_app) +' Say: Direct: Query String! ') )
     
         } else if (typeof (query[type]) == 'function') {
     
             console.info(`Direct: ${type.toUpperCase()} Function: "${query[type]}"`)
             query[type](config.conn,cb)
-            console.info( colors.bgBlue(' Direct: Query Function! ') )
+            console.info( colors.bgBlue(colors.bgMagenta(config.name_app) +' Say: Direct: Query Function! ') )
     
         }
     
     
     }
     
-    function update_schema(cb) {
-    
-        var conn_config = config.conn.config.connectionConfig
-        var filePath = config.root_path + config.migrations_path + '/' + 'schema.sql'
-        
-        fs.unlink(filePath, function () {
-            
-            var cmd = "mysqldump --no-data "
-            if (conn_config.host) {
-              cmd = cmd + " -h " + conn_config.host
-            }
-        
-            if (conn_config.port) {
-              cmd = cmd + " --port=" + conn_config.port
-            }
-        
-            if (conn_config.user) {
-              cmd = cmd + " --user=" + conn_config.user
-            }
-        
-            if (conn_config.password) {
-              cmd = cmd + " --password=" + conn_config.password
-            }
-        
-            cmd = cmd + " " + conn_config.database
-        
-            exec(cmd, function (error, stdout, stderr) {
-            
-                fs.writeFile(filePath, stdout, function (err) {
-                
-                    if (err) {
-                        console.log(colors.red("Could not save schema file"))
-                    }
-                
-                    cb()
-                
-                })
-
-                console.log(colors.red(error))
-
-            })
-    
-        })
-
-    }
-    
-    function createFromSchema(cb) {
-    
-        var conn_config = config.conn.config.connectionConfig
-      
-        var filePath = config.root_path + config.migrations_path + '/' + 'schema.sql'
-      
-        if (fs.existsSync(filePath)) {
-    
-            var cmd = "mysql "
-        
-            if (conn_config.host) {
-            cmd = cmd + " -h " + conn_config.host
-            }
-    
-            if (conn_config.port) {
-                cmd = cmd + " --port=" + conn_config.port
-            }
-    
-            if (conn_config.user) {
-                cmd = cmd + " --user=" + conn_config.user
-            }
-    
-            if (conn_config.password) {
-                cmd = cmd + " --password=" + conn_config.password
-            }
-    
-            cmd = cmd + " " + conn_config.database
-            cmd = cmd + " < " + filePath
-    
-            exec(cmd, function(error, stdout, stderr) {
-          
-                if (error) {
-                    console.log(colors.red("Could not load from Schema: " + error))
-                    cb()
-    
-                } else {
-    
-                    var file_paths = []
-            
-                    readFolder(function (files) {
-              
-                        files.forEach(function (file) {
-                
-                            var timestamp_split = file.split("_", 1)
-                            var timestamp = parseInt(timestamp_split[0])
-                
-                            if (timestamp_split.length) {
-                                file_paths.push({ 'timestamp' : timestamp, file_path : file})
-                            } else {
-                                throw new Error('Invalid file ' + file)
-                            }
-    
-                        })
-    
-                        var final_file_paths = file_paths.sort(function(a, b) { return (a.timestamp - b.timestamp)}).slice(0, 9999999)
-              
-                        execute_query(final_file_paths, 'up', cb, false)
-    
-                    })
-    
-                }
-    
-            })
-    
-        } else {
-            console.log(colors.red("Schema Missing: " + filePath))
-            cb()
-        }
-    
-    }
-
     function handle(argv,cb) {
 
-        if (argv.length > 2 && argv.length <= 6) {
+        if (argv.length > 2 && argv.length <= 5) {
 
-            if (argv[2] == 'add' && (argv[3] == 'migration' || argv[3] == 'seed')) {
+            if (argv[2] == 'add' && (argv[3] == 'migration')) {
 
                 add_migration(argv,function () {
                     config.conn.end()
@@ -583,6 +449,7 @@ function __query(config, options){
                 }
 
                 if (migrate_all) {
+
                     up_migrations_all(count, function () {
                         updateSchemaAndEnd()
                         cb()
@@ -594,6 +461,7 @@ function __query(config, options){
                         updateSchemaAndEnd()
                         cb()
                     })
+
                 }
 
             } else if (argv[2] == 'down') {
@@ -628,31 +496,18 @@ function __query(config, options){
                     cb()
                 })
 
-            } else if (argv[2] == 'load-from-schema') {
-
-                createFromSchema(function () {
-                   config.conn.end()
-                   cb()
-                })
-
-            } else{
-                throw new Error('command not found : ' + argv.join(" "))
+            }else{
+                throw new Error(colors.bgMagenta(config.name_app) + " Say: Command not found : " + argv.join(" "))
             }
 
+        }else{
+            console.info( colors.bgYellow( colors.bgMagenta(config.name_app) + " Say: Many Paramters! "))
+            return 
         }
     }
 
     function updateSchemaAndEnd() {
-
-        if (updateSchema) {
-
-            update_schema(function () {
-                config.conn.end()
-            })
-
-        } else {
-            config.conn.end()
-        }
+        config.conn.end()
     }
 
 }
