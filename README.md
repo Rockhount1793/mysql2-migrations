@@ -62,7 +62,7 @@ link: https://github.com/kawadhiya21/mysql-migrations
     db_query.root_path = 'mysql2-migrations/'
     db_query.migrations_folder = 'migrations'
     db_query.name_table_migrations = 'mysql_migrations_app'
-    //db_query.cb = ()=>{ console.log('optional message') }
+    //db_query.cb = ()=>{ console.log('optional message at success') }
     db_query.start()
 
 ```
@@ -83,10 +83,10 @@ link: https://github.com/kawadhiya21/mysql-migrations
 ```javascript
 
     "scripts": {
-        "db_create": "node mysql2-migrations/migrations_config.js add migration",           
+        "db_create": "node mysql2-migrations/migrations_config.js create",           
         "db_refresh": "node mysql2-migrations/migrations_config.js refresh",                
-        "db_migrate_all": "node mysql2-migrations/migrations_config.js up --migrate-all",   
-        "db_migrate": "node mysql2-migrations/migrations_config.js up 1",                   
+        "db_migrate_all": "node mysql2-migrations/migrations_config.js migrate",   
+        "db_migrate": "node mysql2-migrations/migrations_config.js up",                   
         "db_rollback": "node mysql2-migrations/migrations_config.js down",                   
     }
 
@@ -101,7 +101,9 @@ link: https://github.com/kawadhiya21/mysql-migrations
     - "db_migrate"       // migrate last file pending, example: npm run db_migrate
     - "db_rollback"      // undo latest migration,     example: npm run db_rollback 
 
-    - too You can also UP or DOWN one migration at a time, example:
+
+    - too You can also UP or DOWN direct migrations, example:
+    - ATENTION! ## DIRECT MIGRATIONS WILL NOT BE SAVED IN THE mysql_migrations_app TABLE
 
 ```javascript
     node mysql2-migrations/migrations_config.js run 1500891087394_create_table_users.js up
@@ -119,40 +121,35 @@ link: https://github.com/kawadhiya21/mysql-migrations
 ```
     
     - should to go 'migrations' folder and edit file, example:
-
-    - Choose one format:
-
-    - whit call back function:
-```javascript
-
-
-    export default {
-    
-        'up': function (conn, cb) {
-            conn.query("CREATE TABLE users (user_id INT NOT NULL, UNIQUE KEY user_id (user_id), name TEXT )", function (err, res) {
-                cb(
-                    console.info(' Hello from users migration process.. '),
-                    console.info(res)
-                )
-            })
-        },
-
-        'down': "DROP TABLE users"
-    }
-```
-
-
-    - or use simple syntax:
+    - PLEASE DO NOT MODIFY THE 'cb(e,r)' (debug FUNCTION), IT WILL REGISTER POSSIBLE ERRORS!!!
 
 ```javascript
-    export default {
-    
-        'up':"CREATE TABLE users (user_id INT NOT NULL, UNIQUE KEY user_id (user_id), name TEXT )",
-        'down': "DROP TABLE users"
 
-    }
+
+export default {
+
+    'up': function (conn, cb) {
+        conn.query(
+            `
+            CREATE TABLE users(
+                user_id BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+                name VARCHAR(100) NOT NULL,
+                surname VARCHAR(100) NOT NULL,
+                created_at DATETIME(6) NOT NULL,
+                updated_at DATETIME(6) NOT NULL,
+                PRIMARY KEY (user_id),
+                UNIQUE INDEX user_id_UNIQUE (user_id ASC) VISIBLE
+    
+            `
+            , function (e,r){ cb(e,r)})
+    },
+
+    'down': "DROP TABLE users"
+
+}
 
 ```
+
 
 # run migrations
 
