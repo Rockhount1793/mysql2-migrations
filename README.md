@@ -20,10 +20,10 @@ link: https://github.com/kawadhiya21/mysql-migrations
 - steep 1
 
     - install
-
-    -npm i mysql2
-    -npm i mysql2-migrations-module
-
+```javascript
+    npm i mysql2
+    npm i mysql2-migrations-module
+```
 - steep 2
 
     create a folder in root app with name 'mysql2-migrations'
