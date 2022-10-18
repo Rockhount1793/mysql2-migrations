@@ -1,5 +1,5 @@
 {
-  "name": "mysql2-migrations-module",
+  "name": "mysql2-migrations",
   "version": "1.0.0",
   "description": "Create and manager migrations in mysql",
   "main": "index.js",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Rockhount1793/mysql2-migrations-module.git"
+    "url": "git+https://github.com/Rockhount1793/mysql2-migrations.git"
   },
   "keywords": [
     "mysql2",
@@ -21,9 +21,9 @@
   "author": "NZCaicedo",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Rockhount1793/mysql2-migrations-module/issues"
+    "url": "https://github.com/Rockhount1793/mysql2-migrations/issues"
   },
-  "homepage": "https://github.com/Rockhount1793/mysql2-migrations-module#readme",
+  "homepage": "https://github.com/Rockhount1793/mysql2-migrations#readme",
   "dependencies": {
     "colors": "^1.4.0"
   }
