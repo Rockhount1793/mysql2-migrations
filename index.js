@@ -19,7 +19,7 @@ const Migration ={
                 'migrations_types':['up', 'down'],
                 'conn':{},
                 'cb':function(){
-                    console.info( colors.bgCyan("Rockhount Say: Query Command Completed! ") )
+                    console.info( colors.bgCyan("Rockhount | Command Completed, It is a pleasure to help you! ") )
                 }
             })
 
@@ -179,7 +179,7 @@ function __query(config, options){
 
             const queries = file.default
 
-            console.info( colors.bgGreen( colors.bgMagenta(config.name_app)+" Say: Dispatch: " + run + " Type: " + type.toUpperCase() + " Query: " + queries[type]) )
+            console.info( colors.bgGreen( colors.bgMagenta(config.name_app)+" Dispatch: " + run + " Type: " + type.toUpperCase() + " Query: " + queries[type]) )
 
             var timestamp_val = file_name.split("_", 1)[0]
 
@@ -207,7 +207,7 @@ function __query(config, options){
 
         } else {
 
-            console.info(colors.bgYellow(colors.bgMagenta(config.name_app)+ " Say: No more " + type.toUpperCase() + " migrations to running! "))
+            console.info(colors.bgYellow(colors.bgMagenta(config.name_app)+ " No more querys " + type.toUpperCase() + " to running! "))
             cb()
 
         }
@@ -284,7 +284,7 @@ function __query(config, options){
                     throw err
                 }
     
-                console.info( colors.bgGreen(colors.bgMagenta(config.name_app) + " Say: Added file migration: " + file_name+' ' ))
+                console.info( colors.bgGreen(colors.bgMagenta(config.name_app) + " Added file migration: " + file_name+' ' ))
     
                 cb()
     
@@ -375,31 +375,29 @@ function __query(config, options){
     
             var file_paths = []
     
-            if (results.length) {
+            var temp_timestamps = results.map(function (ele) {
+                return ele.timestamp
+            })
     
-                var temp_timestamps = results.map(function (ele) {
-                    return ele.timestamp
-                })
+            readFolder(function (files) {
     
-                readFolder(function (files) {
+                files.forEach(function (file) {
     
-                    files.forEach(function (file) {
+                    var timestamp = file.split("_", 1)[0]
     
-                        var timestamp = file.split("_", 1)[0]
-    
-                        if (temp_timestamps.indexOf(timestamp) > -1) {
-                            file_paths.push({ 'timestamp' : timestamp, file_path : file})
-                        }
-    
-                    })
-    
-                    var final_file_paths = file_paths.sort(function(a, b) { return (b.timestamp - a.timestamp)}).slice(0, max_count)
-                    execute_query(final_file_paths, 'down', cb)
+                    if (temp_timestamps.indexOf(timestamp) > -1) {
+                        file_paths.push({ 'timestamp' : timestamp, file_path : file})
+                    }
     
                 })
-            }
+    
+                var final_file_paths = file_paths.sort(function(a, b) { return (b.timestamp - a.timestamp)}).slice(0, max_count)
+                execute_query(final_file_paths, 'down', cb)
+    
+            })
     
         })
+
     }
     
     async function run_migration_directly(file, type, cb) {
@@ -414,13 +412,13 @@ function __query(config, options){
     
             console.info(`Direct: ${type.toUpperCase()} Query: "${query[type].toString()}"`)
             run_query(query[type], cb)
-            console.info( colors.bgBlue(colors.bgMagenta(config.name_app) +' Say: Direct: Query String! ') )
+            console.info( colors.bgBlue(colors.bgMagenta(config.name_app) +' Direct: Query String! ') )
     
         } else if (typeof (query[type]) == 'function') {
     
             console.info(`Direct: ${type.toUpperCase()} Function: "${query[type]}"`)
             query[type](config.conn,cb)
-            console.info( colors.bgBlue(colors.bgMagenta(config.name_app) +' Say: Direct: Query Function! ') )
+            console.info( colors.bgBlue(colors.bgMagenta(config.name_app) +' Direct: Query Function! ') )
     
         }
     
@@ -440,12 +438,12 @@ function __query(config, options){
 
             } else if (argv[2] == 'up') {
 
-                var count = null
+                var count = 1
 
                 if (argv.length > 3) {
                     count = parseInt(argv[3]);
                 } else {
-                    count = 999999;
+                    count = 999999
                 }
 
                 if (migrate_all) {
@@ -466,11 +464,11 @@ function __query(config, options){
 
             } else if (argv[2] == 'down') {
 
-                var count = null
+                var count = 1
 
                 if (argv.length > 3) {
                     count = parseInt(argv[3])
-                } else count = 1
+                }
 
                 down_migrations(count, function () {
                     updateSchemaAndEnd()
@@ -497,11 +495,11 @@ function __query(config, options){
                 })
 
             }else{
-                throw new Error(colors.bgMagenta(config.name_app) + " Say: Command not found : " + argv.join(" "))
+                throw new Error(colors.bgMagenta(config.name_app) + " Command not found : " + argv.join(" "))
             }
 
         }else{
-            console.info( colors.bgYellow( colors.bgMagenta(config.name_app) + " Say: Many Paramters! "))
+            console.info( colors.bgYellow( colors.bgMagenta(config.name_app) + " Many Paramters! "))
             return 
         }
     }
