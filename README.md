@@ -67,7 +67,8 @@ link: https://github.com/kawadhiya21/mysql-migrations
 
     root_app/
         mysql2-migrations/
-            migrations
+            migrations_config.js
+            migrations/
 
 - steep 5
 
@@ -86,14 +87,19 @@ link: https://github.com/kawadhiya21/mysql-migrations
 
 ```
 
+    too You can also UP or DOWN one migration at a time, example:
+
+    node mysql2-migrations/migrations_config.js run 1500891087394_create_table_users.js up
+    node mysql2-migrations/migrations_config.js run 1500891087394_create_table_users.js down
+
 # edit file migrations 
 
-    after add file to migrate, example: npm run db_create create_users_table, 
+    after add file to migrate, example: npm run db_create create_users_table 
     should to go 'migrations' folder and edit file, example:
 
 ```javascript
 
-    // Remember to use only one of the examples, Choose one of the two ways
+    // Choose one of the two ways
 
     export default {
     
@@ -120,4 +126,5 @@ link: https://github.com/kawadhiya21/mysql-migrations
 
 ```
 
+    Finally, run the migration with the command: npm run db_migrate
     

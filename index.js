@@ -157,7 +157,7 @@ function __query(config, options){
 
         } else {
 
-            cb({})
+            cb()
 
         }
 
