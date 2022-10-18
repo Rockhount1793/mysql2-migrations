@@ -1,6 +1,7 @@
 # mysql2-migrations
-Create and manager migrations in mysql from repositories with configuration "type module"
-
+    
+    -Create and manager migrations in mysql from repositories with configuration "TYPE MODULE"
+    
 # resume
 
 Especial thanks to "kawadhiya21"
@@ -12,30 +13,33 @@ link: https://github.com/kawadhiya21/mysql-migrations
     -this package has not been tested intensively
     -This package must be used with MODULE TYPE IMPORT, FROM
     -set config on package.json "type": "module"
-    -no compatible with MODULE EXPORT, REQUIRE
+    -NO compatible with MODULE EXPORT, REQUIRE
 
 # configuration
 
 
 - steep 1
 
-    - install
+    - install dependencies
+    - should install 'mysql2' dependency in your projects first
+
 ```javascript
     npm i mysql2
-    npm i mysql2-migrations-module
+    npm i mysql2-migrations
 ```
+
 - steep 2
 
-    create a folder in root app with name 'mysql2-migrations'
+    - create a folder in root app with name 'mysql2-migrations'
 
 - steep 3
 
-    add migrations_config.js file in 'mysql2-migrations' folder with next content
+    - add migrations_config.js file in 'mysql2-migrations' folder with next content
 
 ```javascript
 
     import mysql from 'mysql2'
-    import migration from 'mysql2-migrations-module'
+    import migration from 'mysql2-migrations'
 
     // configuration 'mysql' to connect database 
     
@@ -64,16 +68,16 @@ link: https://github.com/kawadhiya21/mysql-migrations
 
 - steep 4
 
-    create a subfolder in 'mysql2-migrations' folder with name 'migrations'
+    - create a subfolder in 'mysql2-migrations' folder with name 'migrations'
 
-    -root_app/
-        -mysql2-migrations/
-            -migrations_config.js
-            -migrations/
+    - root_app/
+        - mysql2-migrations/
+            - migrations_config.js
+            - migrations/
 
 - steep 5
 
-    Add commands to package.json configuration
+    - Add commands to package.json configuration
 
 ```javascript
 
@@ -88,15 +92,16 @@ link: https://github.com/kawadhiya21/mysql-migrations
 
 ```
 
-    -description
+    - description
 
-    -"db_create"        // create file to migrate, example: npm run db_create create_users_table
-    -"db_refresh"       // undo y redo all migrations (CAUTION DATA LOSS, It is not recommended to add it ) , example: npm run db_refresh
-    -"db_migrate_all"   // migrate all files pending, example: npm run db_migrate_all
-    -"db_migrate"       // migrate last file pending, example: npm run db_migrate
-    -"db_rollback"      // undo latest migration,     example: npm run db_rollback 
+    - "db_create"        // create file to migrate, example: npm run db_create create_users_table
+    - "db_refresh"       // undo y redo all migrations (CAUTION DATA LOSS, It is not recommended to add it ) , example: npm run db_refresh
+    - "db_migrate_all"   // migrate all files pending, example: npm run db_migrate_all
+    - "db_migrate"       // migrate last file pending, example: npm run db_migrate
+    - "db_rollback"      // undo latest migration,     example: npm run db_rollback 
 
-    too You can also UP or DOWN one migration at a time, example:
+    - too You can also UP or DOWN one migration at a time, example:
+
 ```javascript
     node mysql2-migrations/migrations_config.js run 1500891087394_create_table_users.js up
     node mysql2-migrations/migrations_config.js run 1500891087394_create_table_users.js down
@@ -104,9 +109,13 @@ link: https://github.com/kawadhiya21/mysql-migrations
 
 # edit file migrations 
 
-    after add file to migrate, example: npm run db_create create_users_table 
-    should to go 'migrations' folder and edit file, example:
+    - after add file to migrate, example: npm run db_create create_users_table 
+    - should to go 'migrations' folder and edit file, example:
 
+
+    - Choose one of the two ways:
+
+    - whit call back function:
 ```javascript
 
     // Choose one of the two ways
@@ -124,9 +133,12 @@ link: https://github.com/kawadhiya21/mysql-migrations
 
         'down': "DROP TABLE users"
     }
+```
 
-    //or use simple syntax 
-    
+
+    - or use simple syntax:
+
+```javascript
     export default {
     
         'up':"CREATE TABLE users (user_id INT NOT NULL, UNIQUE KEY user_id (user_id), name TEXT )",
@@ -136,5 +148,10 @@ link: https://github.com/kawadhiya21/mysql-migrations
 
 ```
 
-    Finally, run the migration with the command: npm run db_migrate
-    
+# run migrations
+
+    - Finally, run the migration with the command:
+
+```javascript
+    npm run db_migrate
+```

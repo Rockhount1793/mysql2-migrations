@@ -1,7 +1,7 @@
 {
   "name": "mysql2-migrations",
   "version": "1.0.0",
-  "description": "Create and manager migrations in mysql",
+  "description": "Create and manager migrations whit mysql2 and module type apps",
   "main": "index.js",
   "type": "module",
   "scripts": {

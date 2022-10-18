@@ -19,7 +19,7 @@ const Migration ={
                 'migrations_types':['up', 'down'],
                 'conn':{},
                 'cb':function(){
-                    console.info( colors.bgCyan("Rockhount | Command Completed, It is a pleasure to help you! ") )
+                    console.info( colors.bgCyan("Rockhount | Command Completed! ") )
                 }
             })
 
