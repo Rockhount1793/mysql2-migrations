@@ -138,7 +138,7 @@ export default {
                 created_at DATETIME(6) NOT NULL,
                 updated_at DATETIME(6) NOT NULL,
                 PRIMARY KEY (user_id),
-                UNIQUE INDEX user_id_UNIQUE (user_id ASC) VISIBLE
+                UNIQUE INDEX user_id_UNIQUE (user_id ASC) VISIBLE)
     
             `
             , function (e,r){ cb(e,r)})
