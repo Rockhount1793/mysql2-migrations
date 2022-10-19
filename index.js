@@ -18,8 +18,9 @@ const Migration ={
                 'root_path':'',
                 'migrations_types':['up', 'down'],
                 'conn':{},
-                'cb':function(){
-                    console.info( colors.bgCyan("Sabueso | Command Completed! ") )
+                'cb':function(string){
+                    const message = string ? string : ' ' 
+                    console.info( colors.bgCyan(colors.bgMagenta("Sabueso ")+" Command "+colors.bgMagenta(message)+" Completed! ") )
                 }
             })
 
@@ -77,7 +78,7 @@ const Migration ={
             MigrationMap.get(this).root_path = root_path
         }
 
-        start = function(options){
+        start = function(){
 
             const config = {
                 'name_app': this.name_app,
@@ -89,7 +90,7 @@ const Migration ={
                 'cb':this.cb
             }
 
-            __query(config, options)
+            __query(config)
         }
 
     }
@@ -98,18 +99,18 @@ const Migration ={
 
 export default Migration
 
-function __query(config, options){
+function __query(config){
     
     
-    async function migration(cb, options) {
+    async function migration(cb) {
 
         run_query("CREATE TABLE IF NOT EXISTS `" + config.table + "` (`timestamp` varchar(254) NOT NULL UNIQUE)", function (res) {
-            handle(argv,cb)
+            handle(cb)
         })
 
     }
 
-    migration(config.cb,options)
+    migration(config.cb)
 
     function run_query( query, cb){
         
@@ -132,6 +133,7 @@ function __query(config, options){
         
     }
 
+    //OK
     async function execute_query(final_file_paths, type, cb){
 
         if (final_file_paths.length){
@@ -144,7 +146,7 @@ function __query(config, options){
 
             const queries = file.default
 
-            console.info( colors.bgGreen( colors.bgMagenta(config.name_app)+" Dispatch: " + " Type: " + type.toUpperCase() + " Query: " + queries[type]))
+            console.info( colors.bgGreen( colors.bgMagenta(config.name_app)+" Dispatch: " + " Type: " + type.toUpperCase() + " Query: " +queries[type]))
 
             var timestamp_val = file_name.split("_", 1)[0]
 
@@ -157,16 +159,19 @@ function __query(config, options){
                    
                     if(result){
                         updateRecords(type, timestamp_val, function () {
-                            execute_query(final_file_paths, type, cb)
+                            execute_query(final_file_paths, type,cb)
                         })
                     }else{
                         console.log(error)
+                        cb()
                         console.info(colors.bgRed(colors.bgMagenta(config.name_app)+ " Failed Query! " + type.toUpperCase()+' '))
                     }
 
                 })
 
-            } else if (typeof (queries[type]) == 'function') {
+            }
+            
+            if (typeof (queries[type]) == 'function') {
 
                 queries[type](config.conn,function (err,res) {
 
@@ -175,11 +180,13 @@ function __query(config, options){
 
                     if(result){
                         updateRecords(type, timestamp_val, function () {
-                            execute_query(final_file_paths, type, cb)
+                            execute_query(final_file_paths, type,cb)
                         })
                     }else{
                         console.log(error)
+                        cb()
                         console.info(colors.bgRed(colors.bgMagenta(config.name_app)+ " Failed Query! " + type.toUpperCase()+' '))
+                        
                     }
                     
                 })
@@ -187,10 +194,8 @@ function __query(config, options){
 
 
         } else {
-
             console.info(colors.bgYellow(colors.bgMagenta(config.name_app)+ " No more querys " + type.toUpperCase() + " to running! "))
             cb()
-
         }
 
     }
@@ -237,6 +242,7 @@ function __query(config, options){
         })
     }
 
+    //OK
     function add_migration(argv, cb) {
     
         readFolder(function (files) {
@@ -267,7 +273,8 @@ function __query(config, options){
     
     }
     
-    function up_migrations(max_count, cb) {
+    //OK
+    function up_migrations(max_count,cb) {
     
         run_query("SELECT timestamp FROM " + config.table + " ORDER BY timestamp DESC LIMIT 1", function (error, results) {
     
@@ -300,7 +307,7 @@ function __query(config, options){
     
                 var final_file_paths = file_paths.sort(function (a, b) { return (a.timestamp - b.timestamp) }).slice(0, max_count)
     
-                execute_query( final_file_paths, 'up', cb)
+                execute_query( final_file_paths, 'up',cb)
     
             })
     
@@ -308,7 +315,7 @@ function __query(config, options){
 
     }
     
-    function up_migrations_all(max_count, cb) {
+    function up_migrations_all(max_count) {
     
         run_query("SELECT timestamp FROM " + config.table, function (results) {
     
@@ -336,14 +343,15 @@ function __query(config, options){
     
                 var final_file_paths = file_paths.sort(function(a, b) { return (a.timestamp - b.timestamp)}).slice(0, max_count)
                 
-                execute_query(final_file_paths, 'up', cb)
+                execute_query(final_file_paths, 'up')
             
             })
             
         })
     }
     
-    function down_migrations(max_count, cb) {
+    //OK
+    function down_migrations(max_count,cb) {
     
         run_query("SELECT timestamp FROM " + config.table + " ORDER BY timestamp DESC LIMIT " + max_count, function (error, results) {
     
@@ -366,15 +374,20 @@ function __query(config, options){
                 })
     
                 var final_file_paths = file_paths.sort(function(a, b) { return (b.timestamp - a.timestamp)}).slice(0, max_count)
-                execute_query(final_file_paths, 'down', cb)
+                execute_query(final_file_paths, 'down',cb)
     
             })
     
         })
 
+
     }
     
-    async function run_migration_directly(file, type, cb) {
+    //OK
+    async function run_migration_directly(){
+
+        const file = argv[3]
+        const type = argv[4]
 
         const file_data = await import('../../'+config.root_path + config.migrations_path + "/" + file)
     
@@ -398,10 +411,14 @@ function __query(config, options){
                     console.info(colors.bgRed(colors.bgRed(config.name_app)+ " Failed Query! " + type.toUpperCase()+' '))
                 }
 
+                config.conn.end()
+                config.cb(' >> DIRECT QUERY << ')
+
             })
            
-    
-        } else if (typeof (query[type]) == 'function') {
+        }
+        
+        if (typeof (query[type]) == 'function') {
 
             console.info( colors.bgBlue(colors.bgMagenta(config.name_app) +' Direct: Query Function! ') )
     
@@ -419,24 +436,24 @@ function __query(config, options){
                     console.info(colors.bgRed(colors.bgRed(config.name_app)+ " Failed Query! " + type.toUpperCase()+' '))
                 }
 
+                config.conn.end()
+                config.cb(' >> DIRECT QUERY << ')
+
             })
     
         }
     
-    
     }
     
-    function handle(argv,cb){
-        
-        const arg_2 = argv[2]
+    function handle(){
 
-        if (arg_2 == 'create' && argv.length == 4) {
+        if (argv[2] == 'create' && argv.length == 4) {
 
             if(validate_file_name(argv[4])){
 
                 add_migration(argv,function () {
                     config.conn.end()
-                    cb()
+                    config.cb(' >> CREATE << ')
                 })
 
             }
@@ -448,55 +465,58 @@ function __query(config, options){
 
         if (argv.length == 3) {
 
-            if (arg_2 == 'up'){
+            if (argv[2] == 'up'){
 
-                up_migrations(1, function () {
+                up_migrations(1,function(){
                     config.conn.end()
-                    cb()
+                    config.cb(' >> MIGRATE << ')
                 })
 
             }
             
-            if (arg_2 == 'down'){
+            if (argv[2] == 'down'){
 
-                down_migrations(1, function () {
+                down_migrations(1, function (){
                     config.conn.end()
-                    cb()
+                    config.cb(' >> ROLLBACK << ')
                 })
 
             }
 
-            if (arg_2 == 'migrate_all'){
+            if (argv[2] == 'migrate_all'){
 
-                up_migrations_all(99999, function () {
+                up_migrations_all(99999,function () {
                     config.conn.end()
-                    cb()
+                    config.cb(' >> MIGRATE ALL << ')
                 })
 
             }
             
-            if(arg_2 == 'refresh') {
+            if(argv[2] == 'refresh') {
 
                 down_migrations(999999, function () {
 
-                    up_migrations(999999, function () {
+                    up_migrations(999999,function(){
+                        
                         config.conn.end()
-                        cb()
+                        config.cb(' >> REFRESH << ')
+                    
                     })
-
+                    
                 })
 
-                
             }
 
         }
 
-        if (arg_2 == 'run' && config.migrations_types.indexOf(argv[4]) > -1) {
+        if (argv[2] == 'run' && argv.length == 5) {
 
-            run_migration_directly(argv[3], argv[4], function () {
+            if(config.migrations_types.indexOf(argv[4]) > -1){
+                run_migration_directly()
+            }else{
                 config.conn.end()
-                cb()
-            })
+                console.info(colors.bgRed(colors.bgMagenta(config.name_app)+ " Failed Query: Parameter UP or DOWN missed, >> " + argv[4].toUpperCase()+' !!'))
+            }
 
         }
 
