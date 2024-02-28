@@ -10,10 +10,9 @@ link: https://github.com/kawadhiya21/mysql-migrations
 
 # disclaimer
 
-    -this package has not been tested intensively
-    -This package must be used with MODULE TYPE IMPORT, FROM
+    -This package must be used with MODULE TYPE IMPORT AND FROM
     -set config on package.json "type": "module"
-    -NO compatible with MODULE EXPORT, REQUIRE
+    -NO compatible with MODULE EXPORT AND REQUIRE
 
 # configuration
 
@@ -42,7 +41,8 @@ link: https://github.com/kawadhiya21/mysql-migrations
     import mysql from 'mysql2'
     import migration from 'mysql2-migrations'
 
-    // configuration 'mysql' to connect database 
+    // mysql library is required (IMPORTANT)
+    // configuration 'mysql' to connect database
     
     const conn = mysql.createPool({
         'database': 'name_db',
@@ -55,14 +55,13 @@ link: https://github.com/kawadhiya21/mysql-migrations
         'queueLimit':0
     })
 
-    // configuration 'mysql2-migrations' to execute querys (Try not to change the preset parameters)
+    // configuration 'mysql2-migrations' to execute querys
 
-    const db_query = new migration.init()
+    const db_query = new Migration()
     db_query.conn = conn
-    db_query.root_path = 'mysql2-migrations/'
-    db_query.migrations_folder = 'migrations'
-    db_query.name_table_migrations = 'mysql_migrations_app'
-    //db_query.cb = ()=>{ console.log('optional message at success') }
+    db_query.name_app = 'MyApp'
+    //db_query.name_table_migrations = 'table_migrations_app'
+    //db_query.show_query = true
     db_query.start()
 
 ```
@@ -90,7 +89,6 @@ link: https://github.com/kawadhiya21/mysql-migrations
         "db_rollback": "node mysql2-migrations/migrations_config.js down",                   
     }
 
-
 ```
 
     - description
@@ -101,12 +99,11 @@ link: https://github.com/kawadhiya21/mysql-migrations
     - "db_migrate"       // migrate last file pending, example: npm run db_migrate
     - "db_rollback"      // undo latest migration,     example: npm run db_rollback 
 
-
     - too You can also UP or DOWN direct migrations, example:
     - ATENTION! ## DIRECT MIGRATIONS WILL NOT BE SAVED IN THE mysql_migrations_app TABLE
 
 ```javascript
-    node mysql2-migrations/migrations_config.js run 1500891087394_create_table_users.js up
+    node mysql2-migrations/migrations_config.js run 1667598634512_create_users_table.js up
     node mysql2-migrations/migrations_config.js run 1500891087394_create_table_users.js down
 ```
 
@@ -119,7 +116,6 @@ link: https://github.com/kawadhiya21/mysql-migrations
      npm run db_create create_users_table 
 
 ```
-    
     - should to go 'migrations' folder and edit file, example:
     - PLEASE DO NOT MODIFY THE 'cb(e,r)' (debug FUNCTION), IT WILL REGISTER POSSIBLE ERRORS!!!
 
@@ -127,8 +123,8 @@ link: https://github.com/kawadhiya21/mysql-migrations
 
 
 export default {
-
-    'up': function (conn, cb) {
+    "name":"Users Table",
+    "up":(conn,cb)=>{
         conn.query(
             `
             CREATE TABLE users(
@@ -141,15 +137,12 @@ export default {
                 UNIQUE INDEX user_id_UNIQUE (user_id ASC) VISIBLE)
     
             `
-            , function (e,r){ cb(e,r)})
+            ,(e,r)=>{cb(e,r)})
     },
-
-    'down': "DROP TABLE users"
-
+    "down":"DROP TABLE users"
 }
 
 ```
-
 
 # run migrations
 
