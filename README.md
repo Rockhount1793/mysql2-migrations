@@ -74,32 +74,32 @@
 - **db_create**       
     #### Create file to migrate, examples: 
     ```javascript
-        npm run db_create create_users_table
+    npm run db_create create_users_table
     ```
     ```javascript
-        npm run db_create alter_sales_table
+    npm run db_create alter_sales_table
     ```
 - **db_refresh**
     #### Undo y redo all migrations (CAUTION DATA LOSS, It is not recommended to add it ) , example: 
     ```javascript
-        npm run db_refresh
+    npm run db_refresh
     ```
 - **db_migrate_all**  
     #### Migrate all files pending, example: 
     ```javascript    
-    "npm run db_migrate_all"
+    npm run db_migrate_all
     ```
 
 - **db_migrate**
     #### Migrate last file pending, example: 
     ```javascript 
-    "npm run db_migrate"
+    npm run db_migrate
     ```
 
 - **db_rollback**
     #### Undo latest migration,     example: 
     ```javascript     
-    "npm run db_rollback" 
+    npm run db_rollback
     ```
 
 - **too You can also UP or DOWN direct migrations**
@@ -107,7 +107,7 @@
     - example:
 
     ```javascript
-        node mysql2-migrations/migrations_config.js run 1667598634512_create_users_table.js up
+    node mysql2-migrations/migrations_config.js run 1667598634512_create_users_table.js up
     ```
 
 # 👩‍💻 Add file migrations 
@@ -115,7 +115,7 @@
 - Add file to migrate, example:
 
     ```javascript
-        npm run db_create create_users_table 
+    npm run db_create create_users_table 
     ```
  - Go to "migrations" folder and edit file whit query, example:
     
@@ -143,5 +143,5 @@
 - Finally, run the migration with the command:
 
 ```javascript
-    npm run db_migrate
+npm run db_migrate
 ```
