@@ -1,6 +1,6 @@
 {
   "name": "mysql2-migrations",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Create and manager migrations with mysql2 in module type apps, only support windows os",
   "main": "index.js",
   "type": "module",
