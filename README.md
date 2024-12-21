@@ -1,152 +1,146 @@
-# mysql2-migrations
+#  Mysql2 Migrations :: Type module projects : Windows OS
     
-    -Create and manager migrations in mysql from repositories with configuration "TYPE MODULE"
-    
-# resume
-
-Especial thanks to "kawadhiya21"
-This npm module is a modding on mysql-migrations from this user
-link: https://github.com/kawadhiya21/mysql-migrations 
-
-# disclaimer
-
-    -This package must be used with MODULE TYPE IMPORT AND FROM
-    -set config on package.json "type": "module"
-    -NO compatible with MODULE EXPORT AND REQUIRE
-
-# configuration
+- Create and manager migrations with mysql2 from repositories with configuration "TYPE MODULE"
+- Only support windows os
 
 
-- steep 1
+# 📫 Disclaimer
 
-    - install dependencies
-    - should install 'mysql2' dependency in your projects first
+- This package must be used with MODULE TYPE IMPORT AND FROM
+- Set config on package.json "type": "module"
+- NO compatible with MODULE EXPORT AND REQUIRE
+- Due to various reasons between permissions and compatibility this package does NOT work on Linux, I am very sorry.
 
-```javascript
+# 🧠 Configuration
+
+- step 1
+
+    - Install dependencies
+    - Should install 'mysql2' dependency in your projects first
+
+    ```javascript
     npm i mysql2
     npm i mysql2-migrations
-```
+    ```
 
-- steep 2
+- step 2
 
-    - create a folder in root app with name 'mysql2-migrations'
-
-- steep 3
-
-    - add migrations_config.js file in 'mysql2-migrations' folder with next content
-    - here include your credentials from mysql
-
-```javascript
-
-    import mysql from 'mysql2'
-    import migration from 'mysql2-migrations'
-
-    // mysql library is required (IMPORTANT)
-    // configuration 'mysql' to connect database
+    - Execute script to add files configuration in environment
     
-    const conn = mysql.createPool({
-        'database': 'name_db',
-        'user':'root',
-        'password':'password',
-        'host': '127.0.0.1',
-        'port':'3306',
-        'waitForConnections':true,
-        'connectionLimit':10,
-        'queueLimit':0
-    })
+    ```javascript
+    npx mysql2-migrations init
+    ```
+- step 3 (Optional configure environment yourself)
+    
+    - 1.Create a folder in root app with name "mysql2-migrations"
+    - 2.Create a "migrations_config.js" file in "mysql2-migrations" folder with next configuration(add your db credentials here)
 
-    // configuration 'mysql2-migrations' to execute querys
-
+    ```javascript
+    import Migration from 'mysql2-migrations'
+    
     const db_query = new Migration()
-    db_query.conn = conn
-    db_query.name_app = 'MyApp'
-    //db_query.name_table_migrations = 'table_migrations_app'
-    //db_query.show_query = true
+    db_query.database = "test"
+    db_query.user = "root"
+    db_query.password = "paswword"
+    db_query.host = "127.0.0.1"
+    db_query.port = "3306"
+    db_query.name_table_migrations = "table_migrations_app"
+    db_query.show_query = false
+    db_query.show_depuration = false
     db_query.start()
+    ```
 
-```
+    - 3.Create a subfolder "migrations" into "mysql2-migrations" folder:
 
-- steep 4
+        - root_app/
+            - mysql2-migrations/
+                - migrations_config.js
+                - migrations/
 
-    - create a subfolder in 'mysql2-migrations' folder with name 'migrations'
+    - 4.Add scripts commands to package.json configuration:
 
-    - root_app/
-        - mysql2-migrations/
-            - migrations_config.js
-            - migrations/
+    ```javascript
+        "scripts": {
+            "db_create": "node mysql2-migrations/migrations_config.js create",           
+            "db_refresh": "node mysql2-migrations/migrations_config.js refresh",                
+            "db_migrate_all": "node mysql2-migrations/migrations_config.js migrate",   
+            "db_migrate": "node mysql2-migrations/migrations_config.js up",                   
+            "db_rollback": "node mysql2-migrations/migrations_config.js down",                   
+        }
+    ```
 
-- steep 5
-
-    - Add commands to package.json configuration
-
-```javascript
-
-    "scripts": {
-        "db_create": "node mysql2-migrations/migrations_config.js create",           
-        "db_refresh": "node mysql2-migrations/migrations_config.js refresh",                
-        "db_migrate_all": "node mysql2-migrations/migrations_config.js migrate",   
-        "db_migrate": "node mysql2-migrations/migrations_config.js up",                   
-        "db_rollback": "node mysql2-migrations/migrations_config.js down",                   
-    }
-
-```
-
-    - description
-
-    - "db_create"        // create file to migrate, example: npm run db_create create_users_table
-    - "db_refresh"       // undo y redo all migrations (CAUTION DATA LOSS, It is not recommended to add it ) , example: npm run db_refresh
-    - "db_migrate_all"   // migrate all files pending, example: npm run db_migrate_all
-    - "db_migrate"       // migrate last file pending, example: npm run db_migrate
-    - "db_rollback"      // undo latest migration,     example: npm run db_rollback 
-
-    - too You can also UP or DOWN direct migrations, example:
-    - ATENTION! ## DIRECT MIGRATIONS WILL NOT BE SAVED IN THE mysql_migrations_app TABLE
-
-```javascript
-    node mysql2-migrations/migrations_config.js run 1667598634512_create_users_table.js up
-    node mysql2-migrations/migrations_config.js run 1500891087394_create_table_users.js down
-```
-
-# edit file migrations 
-
-    - after add file to migrate, example:
-
-```javascript
-
-     npm run db_create create_users_table 
-
-```
-    - should to go 'migrations' folder and edit file, example:
-    - PLEASE DO NOT MODIFY THE 'cb(e,r)' (debug FUNCTION), IT WILL REGISTER POSSIBLE ERRORS!!!
-
-```javascript
-
-
-export default {
-    "name":"Users Table",
-    "up":(conn,cb)=>{
-        conn.query(
-            `
-            CREATE TABLE users(
-                user_id BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-                name VARCHAR(100) NOT NULL,
-                surname VARCHAR(100) NOT NULL,
-                created_at DATETIME(6) NOT NULL,
-                updated_at DATETIME(6) NOT NULL,
-                PRIMARY KEY (user_id),
-                UNIQUE INDEX user_id_UNIQUE (user_id ASC) VISIBLE)
+# 👋 Description script commnads
     
-            `
-            ,(e,r)=>{cb(e,r)})
-    },
-    "down":"DROP TABLE users"
-}
+- **db_create**       
+    #### Create file to migrate, examples: 
+    ```javascript
+        npm run db_create create_users_table
+    ```
+    ```javascript
+        npm run db_create alter_sales_table
+    ```
+- **db_refresh**
+    #### Undo y redo all migrations (CAUTION DATA LOSS, It is not recommended to add it ) , example: 
+    ```javascript
+        npm run db_refresh
+    ```
+- **db_migrate_all**  
+    #### Migrate all files pending, example: 
+    ```javascript    
+    "npm run db_migrate_all"
+    ```
 
-```
+- **db_migrate**
+    #### Migrate last file pending, example: 
+    ```javascript 
+    "npm run db_migrate"
+    ```
 
-# run migrations
+- **db_rollback**
+    #### Undo latest migration,     example: 
+    ```javascript     
+    "npm run db_rollback" 
+    ```
 
-    - Finally, run the migration with the command:
+- **too You can also UP or DOWN direct migrations**
+    - DIRECT MIGRATIONS WILL NOT BE SAVED IN THE "mysql_migrations_app" TABLE
+    - example:
+
+    ```javascript
+        node mysql2-migrations/migrations_config.js run 1667598634512_create_users_table.js up
+    ```
+
+# 👩‍💻 Add file migrations 
+
+- Add file to migrate, example:
+
+    ```javascript
+        npm run db_create create_users_table 
+    ```
+ - Go to "migrations" folder and edit file whit query, example:
+    
+    ```javascript
+        export default {
+            "description":"Create Users Table",
+            "up":
+                `
+                CREATE TABLE users(
+                    user_id BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+                    name VARCHAR(100) NOT NULL,
+                    surname VARCHAR(100) NOT NULL,
+                    created_at DATETIME(6) NOT NULL,
+                    updated_at DATETIME(6) NOT NULL,
+                    PRIMARY KEY (user_id),
+                    UNIQUE INDEX user_id_UNIQUE (user_id ASC) VISIBLE)
+                `
+            },
+            "down":"DROP TABLE users"
+        }
+    ```
+
+# :	⚡️ Run migrations
+
+- Finally, run the migration with the command:
 
 ```javascript
     npm run db_migrate

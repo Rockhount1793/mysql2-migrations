@@ -1,11 +1,15 @@
 {
   "name": "mysql2-migrations",
-  "version": "2.5.5",
-  "description": "Create and manager migrations with mysql2 in module type apps",
+  "version": "3.0.0",
+  "description": "Create and manager migrations with mysql2 in module type apps, only support windows os",
   "main": "index.js",
   "type": "module",
+  "bin":{
+    "mysql2-migrations":"config.js"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "init": "node config.js"
   },
   "repository": {
     "type": "git",
@@ -16,7 +20,8 @@
     "migrations",
     "nodejs",
     "module",
-    "database"
+    "database",
+    "windows"
   ],
   "author": "NZCaicedo",
   "license": "MIT",
