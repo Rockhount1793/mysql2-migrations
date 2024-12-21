@@ -117,7 +117,7 @@
     ```javascript
     npm run db_create create_users_table 
     ```
- - Go to "migrations" folder and edit file whit query, example:
+ - Go to "migrations" folder and edit file with query, example:
     
     ```javascript
         export default {
