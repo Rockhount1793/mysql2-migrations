@@ -3,7 +3,6 @@
 - Create and manager migrations with mysql2 from repositories with configuration "TYPE MODULE"
 - Only support windows os
 
-
 # 📫 Disclaimer
 
 - This package must be used with MODULE TYPE IMPORT AND FROM
@@ -25,7 +24,7 @@
 
 - step 2
 
-    - Execute script to add files configuration in environment
+    - Execute script to add files configuration in environment (reminder: add credentials in Migration instance on finalize)
     
     ```javascript
     npx mysql2-migrations init
@@ -41,9 +40,9 @@
     const db_query = new Migration()
     db_query.database = "test"
     db_query.user = "root"
-    db_query.password = "paswword"
+    db_query.password = "password"
     db_query.host = "127.0.0.1"
-    db_query.port = "3306"
+    db_query.port = 3306
     db_query.name_table_migrations = "table_migrations_app"
     db_query.show_query = false
     db_query.show_depuration = false
@@ -133,7 +132,7 @@
                     PRIMARY KEY (user_id),
                     UNIQUE INDEX user_id_UNIQUE (user_id ASC) VISIBLE)
                 `
-            },
+            ,
             "down":"DROP TABLE users"
         }
     ```

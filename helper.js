@@ -54,22 +54,16 @@ const __query = async(config)=>{
     objectConn.port = config.port
     _config = config
     const makedir = await makeaDir()
-    if(!makedir.status){
-        return makedir
-    }
+    if(!makedir.status){ return makedir }
     const result = await run_query("CREATE TABLE IF NOT EXISTS `" +_config.table+ "` (`timestamp` varchar(254) NOT NULL UNIQUE)")
-    if(result.status){
-        return await handle(result)
-    }
+    if(result.status){ return await handle(result) }
     return result
 }
 
 const run_query = async(query)=>{
     const pool = mysql.createPool(objectConn)
     const conn = await pool.getConnection().catch((err)=> {return {"error":err}})
-    if(conn.error){
-        return conn
-    }
+    if(conn.error){ return conn }
     const result = await conn.query(query).then(([rows,fields])=>{
        return {"status":true,rows,fields}
     })
@@ -90,9 +84,7 @@ const execute_query = async (files_names,type)=>{
         const file_name = sort_files_names.shift()["file_name"]
         const file = await import(pathToFileURL(path.join(relative_path,file_name)))
         const queries = file.default
-        
         const description = MessageConsoleAction(queries,type,file_name)
-        
         const timestamp_val = file_name.split("_",1)[0]
 
         if(typeof (queries[type]) == "string"){
@@ -158,9 +150,7 @@ const up_migrations = async()=>{
     const result = await run_query("SELECT timestamp FROM "+_config.table+" ORDER BY timestamp DESC LIMIT 1")
     const files_names = []
     let max_timestamp = 0
-    if(result.status && result.rows.length){
-        max_timestamp = result.rows[0].timestamp
-    }
+    if(result.status && result.rows.length){ max_timestamp = result.rows[0].timestamp }
     const files = await readFolder()
     files.forEach((file)=>{
         const timestamp_split = file.split("_",1)
@@ -214,7 +204,6 @@ const run_migration_directly = async()=>{
     const type=argv[4]
     const file_data = await import(pathToFileURL(path.join(relative_path,file_name)))
     const queries = file_data.default
-    
     const description = MessageConsoleAction(queries,type,file_name)
     
     if(typeof (queries[type]) == "string"){
@@ -241,9 +230,7 @@ const run_migration_directly = async()=>{
 const MessageConsoleAction = (queries,type,file_name)=>{
     const description = queries["description"] ?? file_name
     let message_query = " no show query "
-    if(_config.show_query){
-        message_query = queries[type]
-    }
+    if(_config.show_query){ message_query = queries[type] }
     console.info(colors.bgMagenta(_config.name_app)+colors.bgGreen(" Dispatch: ")+colors.bgBlue(" Type: " +type.toUpperCase())+colors.bgGreen(" Query: ")+colors.bgCyan(message_query)+colors.bgGreen(" Description: ")+colors.bgCyan(description))
     return description
 }
@@ -258,7 +245,6 @@ const MessageConsoleQueryError = (type,description)=>{
 }
 
 const handle = async()=>{
-    //OK
     if(argv[2] == 'create' && argv.length == 4){
         const validateFileName =  validate_file_name(argv[3])
         if(validateFileName.status){ 
@@ -276,30 +262,28 @@ const handle = async()=>{
             return validateFileName
         }
     }
-    //OK
     if(argv.length == 3){
         
-        //OK
         if(argv[2] == "up"){
             max_count = 1
             const result = await up_migrations()
             _config.cb(" >> MIGRATE << ")
             return result
         }
-        //OK
+        
         if(argv[2] == "down"){
             max_count = 1
             const result = down_migrations()
             _config.cb(" >> ROLLBACK << ")
             return result
         }
-        //OK
+        
         if(argv[2] == "migrate"){
             const result = await up_migrations_all()
             _config.cb(" >> MIGRATE ALL << ")
             return result
         }
-        //OK
+        
         if(argv[2] == "refresh"){
             const resultdown = await down_migrations()
             const resultup = await up_migrations()
@@ -307,7 +291,7 @@ const handle = async()=>{
             return {"down":resultdown,"up":resultup}
         }
     }
-    //OK
+    
     if (argv[2] && argv[2] == 'run' && argv.length == 5){
         if(_config.migrations_types.includes(argv[4])){
             const result = await run_migration_directly()

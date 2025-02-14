@@ -33,7 +33,7 @@ export default class Migration {
             }
         })
         if( typeof this.show_depuration === "boolean" && this.show_depuration){
-            console.info("log:",result)
+            console.info("mysql2-migrations log:",result)
         }
         process.exit(0)
     }
