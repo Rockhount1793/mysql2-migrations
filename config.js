@@ -19,12 +19,12 @@ const addFileConfig = async ()=>{
     "const db_query = new Migration()\n"+
     'db_query.database = "test"\n'+
     'db_query.user = "root"\n'+
-    'db_query.password = "paswword"\n'+
+    'db_query.password = "password"\n'+
     'db_query.host = "127.0.0.1"\n'+
     "db_query.port = 3306\n"+
     'db_query.name_table_migrations = "table_migrations_app"\n'+
-    "db_query.show_query = false\n"+
-    "db_query.show_depuration = false\n"+
+    "db_query.show_query = true\n"+
+    "db_query.show_depuration = true\n"+
     "db_query.start()\n";
     
     try {

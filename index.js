@@ -10,11 +10,11 @@ export default class Migration {
         this.port = 3306
         this.user= 'root',
         this.database= 'test',
-        this.password = 'paswword',
+        this.password = 'password',
         this.name_app = os.hostname() || os.userInfo().username || "Sabueso",
         this.name_table_migrations = "table_migrations_app",
-        this.show_query=false,
-        this.show_depuration=false
+        this.show_query=true,
+        this.show_depuration=true
     }
 
     start= async()=>{
@@ -33,7 +33,7 @@ export default class Migration {
             }
         })
         if( typeof this.show_depuration === "boolean" && this.show_depuration){
-            console.info("mysql2-migrations log:",result)
+            console.info(colors.bgCyan("mysql2-migrations log:"),result)
         }
         process.exit(0)
     }

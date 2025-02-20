@@ -44,8 +44,8 @@
     db_query.host = "127.0.0.1"
     db_query.port = 3306
     db_query.name_table_migrations = "table_migrations_app"
-    db_query.show_query = false
-    db_query.show_depuration = false
+    db_query.show_query = true
+    db_query.show_depuration = true
     db_query.start()
     ```
 
@@ -137,7 +137,7 @@
         }
     ```
 
-# :	⚡️ Run migrations
+# ⚡️ Run migrations
 
 - Finally, run the migration with the command:
 
